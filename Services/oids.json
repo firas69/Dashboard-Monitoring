@@ -1,0 +1,57 @@
+{
+    "oids": {
+        "system": {
+            "sysDescr": {
+                "id": "oid1",
+                "description": "System Description",
+                "oid": "1.3.6.1.2.1.1.1.0"
+            },
+            "sysObjectID": {
+                "id": "oid2",
+                "description": "System Object ID",
+                "oid": "1.3.6.1.2.1.1.2.0"
+            },
+            "sysUpTime": {
+                "id": "oid3",
+                "description": "System Uptime",
+                "oid": "1.3.6.1.2.1.1.3.0"
+            },
+            "sysContact": {
+                "id": "oid4",
+                "description": "System Contact",
+                "oid": "1.3.6.1.2.1.1.4.0"
+            },
+            "sysName": {
+                "id": "oid5",
+                "description": "System Name",
+                "oid": "1.3.6.1.2.1.1.5.0"
+            },
+            "sysLocation": {
+                "id": "oid6",
+                "description": "System Location",
+                "oid": "1.3.6.1.2.1.1.6.0"
+            },
+            "sysServices": {
+                "id": "oid7",
+                "description": "System Services",
+                "oid": "1.3.6.1.2.1.1.7.0"
+            }
+        },
+        "network": {
+            "octetsIN": {
+                "id": "oid8",
+                "description": "Number of octets in",
+                "oid": "1.3.6.1.2.1.2.2.1.10.2"
+            },
+            "octetsOUT": {
+                "id": "oid9",
+                "description": "Number of octets out",
+                "oid": "1.3.6.1.2.1.2.2.1.16.2"
+            }
+        }
+    },
+    "default_oids": [
+        "sysName",
+        "sysDescr"
+    ]
+}
