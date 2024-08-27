@@ -43,7 +43,7 @@ def scan_network(network_range):
     active_ips = []
     for line in result.stdout.splitlines():
         if "Nmap scan report for" in line:
-            ip_address = line.split(" ")[-1]
+            ip_address = line.split(" ")[-1].strip("()")  # Remove parentheses if they exist
             active_ips.append(ip_address)
     print(f"Active IP addresses: {active_ips}")
     return active_ips
@@ -92,3 +92,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

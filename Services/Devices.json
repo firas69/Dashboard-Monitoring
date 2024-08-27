@@ -1,0 +1,20 @@
+{
+    "active_device": [
+        "192.168.88.1",
+        "192.168.88.252",
+        "192.168.88.253",
+        "192.168.88.254"
+    ],
+    "devices": [
+        {
+            "ip_address": "192.168.88.1",
+            "sysName": "MikroTik",
+            "sysDescription": "RouterOS CHR"
+        },
+        {
+            "ip_address": "192.168.88.252",
+            "sysName": "kali",
+            "sysDescription": "Linux kali 6.6.15-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.6.15-2kali1 (2024-05-17) x86_64"
+        }
+    ]
+}

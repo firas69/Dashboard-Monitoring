@@ -9,6 +9,10 @@ import json
 with open('Config.json') as config_file:
     config = json.load(config_file)
 
+# Load OIDs from OIDs.json
+with open('oids.json') as oids_file:
+    oids_data = json.load(oids_file)
+
 # Access the InfluxDB configuration
 influx_token = config['InfluxDbToken']
 influx_org = config['InfluxDbOrg']
@@ -22,10 +26,10 @@ polling_interval = config['SNMP']['polling_interval']
 client = InfluxDBClient(url=influx_url, token=influx_token, org=influx_org)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-# Load OIDs for octetsIN and octetsOUT
+# Load OIDs for octetsIN and octetsOUT from the JSON file
 oids_to_poll = [
-    ("octetsIN", "1.3.6.1.2.1.2.2.1.10"),  # OID for octetsIN
-    ("octetsOUT", "1.3.6.1.2.1.2.2.1.16")  # OID for octetsOUT
+    ("octetsIN", oids_data['oids']['network']['octetsIN']['oid']),  # OID for octetsIN
+    ("octetsOUT", oids_data['oids']['network']['octetsOUT']['oid'])  # OID for octetsOUT
 ]
 
 # Load active devices
@@ -34,25 +38,29 @@ def load_active_devices(devices_file):
         devices_data = json.load(f)['active_device']
     return devices_data
 
-# SNMP Bulk Polling Function
-async def poll_bulk_snmp_data(ip, oids, community_string="public"):
-    errorIndication, errorStatus, errorIndex, varBinds = await bulkCmd(
-        SnmpEngine(),
-        CommunityData(community_string),
-        UdpTransportTarget((ip, 161)),
-        ContextData(),
-        0, len(oids),
-        *[ObjectType(ObjectIdentity(oid[1])) for oid in oids]
-    )
+# SNMP Polling Function
+async def poll_snmp_data(ip, oids, community_string="public"):
+    result = {}
+    for oid_name, oid in oids:
+        errorIndication, errorStatus, errorIndex, varBinds = await getCmd(
+            SnmpEngine(),
+            CommunityData(community_string),
+            UdpTransportTarget((ip, 161)),
+            ContextData(),
+            ObjectType(ObjectIdentity(oid))
+        )
 
-    if errorIndication:
-        print(f"Error: {errorIndication}")
-        return None
-    elif errorStatus:
-        print(f"Error: {errorStatus.prettyPrint()} at {errorIndex and varBinds[int(errorIndex) - 1][0] or '?'}")
-        return None
-    else:
-        return {oid_name: int(varBind[1]) for oid_name, varBind in zip([oid[0] for oid in oids], varBinds)}
+        if errorIndication:
+            print(f"Error: {errorIndication}")
+        elif errorStatus:
+            print(f"Error: {errorStatus.prettyPrint()} at {errorIndex and varBinds[int(errorIndex) - 1][0] or '?'}")
+        else:
+            # Extract the value from varBinds
+            for varBind in varBinds:
+                result[oid_name] = int(varBind[1])
+                print(f"IP: {ip}, OID: {oid_name}, Value: {result[oid_name]}")
+
+    return result
 
 # Main function to poll devices and insert data into InfluxDB
 async def main():
@@ -60,7 +68,7 @@ async def main():
 
     while True:
         for ip in devices:
-            snmp_values = await poll_bulk_snmp_data(ip, oids_to_poll)
+            snmp_values = await poll_snmp_data(ip, oids_to_poll)
             if snmp_values:
                 for oid_name, value in snmp_values.items():
                     point = Point("snmp_data") \
@@ -68,7 +76,6 @@ async def main():
                         .tag("oid_name", oid_name) \
                         .field(oid_name, value) \
                         .time(time.time_ns(), write_precision='ns')
-
                     write_api.write(bucket=influx_bucket, org=influx_org, record=point)
                     print(f"IP: {ip}, OID: {oid_name}, Value: {value}")
 
@@ -79,3 +86,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         client.close()
+

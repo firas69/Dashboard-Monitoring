@@ -1,9 +1,36 @@
 import asyncio
 from pysnmp.hlapi.asyncio import *
 import json
-import time
+import os
+
+#################### Config File Setup ###########################
+def setup_config_file():
+    config_file_name = 'Config.json'
+    
+    if not os.path.exists(config_file_name):
+        print("Config.json file not found. Setting up a new one...")
+        
+        # Prompt the user for necessary configurations
+        snmp_polling_interval = int(input("Enter SNMP polling interval (in seconds): "))
+        
+        config_data = {
+            "SNMP": {
+                "polling_interval": snmp_polling_interval
+            }
+        }
+        
+        # Save the configuration to Config.json
+        with open(config_file_name, 'w') as config_file:
+            json.dump(config_data, config_file, indent=4)
+        
+        print(f"Configuration file '{config_file_name}' created successfully.")
+    else:
+        print("Config.json file found. Proceeding with the existing configuration.")
 
 #################### Configs and Data Retrieval ###########################
+# Setup Config.json file if it doesn't exist
+setup_config_file()
+
 # Load the configuration file
 with open('Config.json') as config_file:
     config = json.load(config_file)
@@ -55,7 +82,7 @@ async def poll_snmp_data(ip, oid, community_string="public"):
             return str(varBind[1])  # Convert SNMP response to string
 
 async def main():
-    oids = load_oids('OIDs.json')
+    oids = load_oids('oids.json')
     devices = load_devices('Devices.json')
 
     while True:
@@ -70,8 +97,19 @@ async def main():
             if sys_descr is not None:
                 device_info['sysDescription'] = sys_descr
 
-            # Insert the polled data into the 'devices' list
-            devices['devices'].append(device_info)
+            # Check if the device with the same IP already exists
+            updated = False
+            for device in devices['devices']:
+                if device['ip_address'] == ip:
+                    device.update(device_info)
+                    updated = True
+                    break
+
+            # If the device doesn't exist, append it
+            if not updated:
+                devices['devices'].append(device_info)
+                print(f"New device at {ip} added.")
+
             print(f"Device at {ip} polled successfully.")
 
         # Save the updated devices information back to Devices.json
@@ -84,3 +122,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         print("Polling stopped.")
+

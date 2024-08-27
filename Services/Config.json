@@ -1,0 +1,9 @@
+{
+    "SNMP": {
+        "polling_interval": 20
+    },
+    "InfluxDbToken": "0msWIjSE5KSvhCZIMZMg3MhmRYa0ooIr9TDr38yNb3XiZMiopBYkqujyGylQZW_LSZIx-r-PEbYKUciXcFkk5g==",
+    "InfluxDbOrg": "org",
+    "InfluxDbBucket": "bucket",
+    "InfluxDbUrl": "http://localhost:8086" 
+}
